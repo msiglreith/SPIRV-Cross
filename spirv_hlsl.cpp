@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <assert.h>
 
+#include <iostream>
+
 using namespace spv;
 using namespace spirv_cross;
 using namespace std;
@@ -1410,7 +1412,7 @@ string CompilerHLSL::layout_for_member(const SPIRType &type, uint32_t index)
 }
 
 void CompilerHLSL::emit_struct_member(const SPIRType &type, uint32_t member_type_id, uint32_t index,
-                                      const string &qualifier)
+                                      const string &qualifier, uint32_t base_offset)
 {
 	auto &membertype = get<SPIRType>(member_type_id);
 
@@ -1426,9 +1428,11 @@ void CompilerHLSL::emit_struct_member(const SPIRType &type, uint32_t member_type
 		qualifiers = to_interpolation_qualifiers(memberflags);
 
 	string packing_offset;
-	if (has_decoration(type.self, DecorationCPacked) && has_member_decoration(type.self, index, DecorationOffset))
+	bool is_push_constant = type.storage == StorageClassPushConstant;
+
+	if ((has_decoration(type.self, DecorationCPacked) || is_push_constant) && has_member_decoration(type.self, index, DecorationOffset))
 	{
-		uint32_t offset = memb[index].offset;
+		uint32_t offset = memb[index].offset - base_offset;
 		if (offset & 3)
 			SPIRV_CROSS_THROW("Cannot pack on tighter bounds than 4 bytes in HLSL.");
 
@@ -1508,7 +1512,45 @@ void CompilerHLSL::emit_buffer_block(const SPIRVariable &var)
 
 void CompilerHLSL::emit_push_constant_block(const SPIRVariable &var)
 {
-	emit_buffer_block(var);
+	std::cout << options.root_constants_layout.size() << std::endl;
+	if (options.root_constants_layout.empty())
+	{
+		emit_buffer_block(var);
+		return;
+	}
+	else
+	{
+		for(auto const& layout : options.root_constants_layout)
+		{
+			auto &type = get<SPIRType>(var.basetype);
+
+			flattened_structs.insert(var.self);
+			type.member_name_cache.clear();
+			add_resource_name(var.self);
+			auto &memb = meta[type.self].members;
+
+			statement("cbuffer ", to_name(var.self), ": register(b", layout.start / 4, ", space0)");
+			begin_scope();
+			for (auto offset = layout.start; offset < layout.end; offset += 4)
+			{
+				uint32_t i = 0;
+				for (auto &member : type.member_types)
+				{
+					if (memb[i].offset == offset)
+					{
+						add_member_name(type, i);
+						auto backup_name = get_member_name(type.self, i);
+						auto member_name = to_member_name(type, i);
+						set_member_name(type.self, i, sanitize_underscores(join(to_name(type.self), "_", member_name)));
+						emit_struct_member(type, member, i, "", layout.start);
+						set_member_name(type.self, i, backup_name);
+					}
+					i++;
+				}
+			}
+			end_scope_decl();
+		}
+	}
 }
 
 string CompilerHLSL::to_sampler_expression(uint32_t id)

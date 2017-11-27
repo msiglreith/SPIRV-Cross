@@ -30,6 +30,11 @@ struct HLSLVertexAttributeRemap
 	std::string semantic;
 };
 
+struct RootConstants {
+	uint32_t start;
+	uint32_t end;
+};
+
 class CompilerHLSL : public CompilerGLSL
 {
 public:
@@ -39,6 +44,8 @@ public:
 
 		// Allows the PointSize builtin, and ignores it, as PointSize is not supported in HLSL.
 		bool point_size_compat = false;
+
+		std::vector<RootConstants> root_constants_layout = {};
 	};
 
 	CompilerHLSL(std::vector<uint32_t> spirv_)
@@ -109,7 +116,7 @@ private:
 	void emit_atomic(const uint32_t *ops, uint32_t length, spv::Op op);
 
 	void emit_struct_member(const SPIRType &type, uint32_t member_type_id, uint32_t index,
-	                        const std::string &qualifier) override;
+	                        const std::string &qualifier, uint32_t base_offset = 0) override;
 
 	const char *to_storage_qualifiers_glsl(const SPIRVariable &var) override;
 
