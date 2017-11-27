@@ -6506,7 +6506,7 @@ string CompilerGLSL::variable_decl(const SPIRType &type, const string &name, uin
 // Emit a structure member. Subclasses may override to modify output,
 // or to dynamically add a padding member if needed.
 void CompilerGLSL::emit_struct_member(const SPIRType &type, uint32_t member_type_id, uint32_t index,
-                                      const string &qualifier)
+                                      const string &qualifier, uint32_t base_offset)
 {
 	auto &membertype = get<SPIRType>(member_type_id);
 
