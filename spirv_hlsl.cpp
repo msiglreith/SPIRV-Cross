@@ -19,8 +19,6 @@
 #include <algorithm>
 #include <assert.h>
 
-#include <iostream>
-
 using namespace spv;
 using namespace spirv_cross;
 using namespace std;
@@ -1430,7 +1428,8 @@ void CompilerHLSL::emit_struct_member(const SPIRType &type, uint32_t member_type
 	string packing_offset;
 	bool is_push_constant = type.storage == StorageClassPushConstant;
 
-	if ((has_decoration(type.self, DecorationCPacked) || is_push_constant) && has_member_decoration(type.self, index, DecorationOffset))
+	if ((has_decoration(type.self, DecorationCPacked) || is_push_constant) &&
+	    has_member_decoration(type.self, index, DecorationOffset))
 	{
 		uint32_t offset = memb[index].offset - base_offset;
 		if (offset & 3)
@@ -1512,15 +1511,13 @@ void CompilerHLSL::emit_buffer_block(const SPIRVariable &var)
 
 void CompilerHLSL::emit_push_constant_block(const SPIRVariable &var)
 {
-	std::cout << options.root_constants_layout.size() << std::endl;
 	if (options.root_constants_layout.empty())
 	{
 		emit_buffer_block(var);
-		return;
 	}
 	else
 	{
-		for(auto const& layout : options.root_constants_layout)
+		for (auto const &layout : options.root_constants_layout)
 		{
 			auto &type = get<SPIRType>(var.basetype);
 

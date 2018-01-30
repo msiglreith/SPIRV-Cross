@@ -29,8 +29,12 @@ struct HLSLVertexAttributeRemap
 	uint32_t location;
 	std::string semantic;
 };
-
-struct RootConstants {
+// Specifying a root constant (d3d12) or push constant range (vulkan).
+//
+// `start` and `end` denotes the range of the root constant in bytes.
+// Both values need to be multiple of 4.
+struct RootConstants
+{
 	uint32_t start;
 	uint32_t end;
 };
@@ -115,8 +119,8 @@ private:
 	void emit_store(const Instruction &instruction);
 	void emit_atomic(const uint32_t *ops, uint32_t length, spv::Op op);
 
-	void emit_struct_member(const SPIRType &type, uint32_t member_type_id, uint32_t index,
-	                        const std::string &qualifier, uint32_t base_offset = 0) override;
+	void emit_struct_member(const SPIRType &type, uint32_t member_type_id, uint32_t index, const std::string &qualifier,
+	                        uint32_t base_offset = 0) override;
 
 	const char *to_storage_qualifiers_glsl(const SPIRVariable &var) override;
 
