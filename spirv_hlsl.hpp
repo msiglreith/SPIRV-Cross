@@ -48,8 +48,6 @@ public:
 
 		// Allows the PointSize builtin, and ignores it, as PointSize is not supported in HLSL.
 		bool point_size_compat = false;
-
-		std::vector<RootConstants> root_constants_layout = {};
 	};
 
 	CompilerHLSL(std::vector<uint32_t> spirv_)
@@ -70,6 +68,15 @@ public:
 	void set_options(Options &opts)
 	{
 		options = opts;
+	}
+
+	// Optionally specify a custom root constant layout.
+	//
+	// Push constants ranges will be split up according to the
+	// layout specified.
+	void set_root_constant_layouts(std::vector<RootConstants> layout)
+	{
+		root_constants_layout = layout;
 	}
 
 	// Compiles and remaps vertex attributes at specific locations to a fixed semantic.
@@ -169,6 +176,10 @@ private:
 
 	void emit_io_block(const SPIRVariable &var);
 	std::string to_semantic(uint32_t vertex_location);
+
+	// Custom root constant layout, which should be emitted
+	// when translating push constant ranges.
+	std::vector<RootConstants> root_constants_layout;
 };
 }
 

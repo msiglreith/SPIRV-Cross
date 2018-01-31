@@ -1511,13 +1511,13 @@ void CompilerHLSL::emit_buffer_block(const SPIRVariable &var)
 
 void CompilerHLSL::emit_push_constant_block(const SPIRVariable &var)
 {
-	if (options.root_constants_layout.empty())
+	if (root_constants_layout.empty())
 	{
 		emit_buffer_block(var);
 	}
 	else
 	{
-		for (auto const &layout : options.root_constants_layout)
+		for (auto const &layout : root_constants_layout)
 		{
 			auto &type = get<SPIRType>(var.basetype);
 
