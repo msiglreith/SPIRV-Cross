@@ -1526,7 +1526,7 @@ void CompilerHLSL::emit_push_constant_block(const SPIRVariable &var)
 			add_resource_name(var.self);
 			auto &memb = meta[type.self].members;
 
-			statement("cbuffer ", to_name(var.self), ": register(b", layout.start / 4, ", space0)");
+			statement("cbuffer ", to_name(var.self), to_resource_register('b', layout.binding, layout.space));
 			begin_scope();
 			for (auto offset = layout.start; offset < layout.end; offset += 4)
 			{
@@ -2303,23 +2303,23 @@ string CompilerHLSL::to_resource_binding(const SPIRVariable &var)
 		return "";
 
 	auto &type = get<SPIRType>(var.basetype);
-	const char *space = nullptr;
+	char space = 0;
 
 	switch (type.basetype)
 	{
 	case SPIRType::SampledImage:
-		space = "t"; // SRV
+		space = 't'; // SRV
 		break;
 
 	case SPIRType::Image:
 		if (type.image.sampled == 2)
-			space = "u"; // UAV
+			space = 'u'; // UAV
 		else
-			space = "t"; // SRV
+			space = 't'; // SRV
 		break;
 
 	case SPIRType::Sampler:
-		space = "s";
+		space = 's';
 		break;
 
 	case SPIRType::Struct:
@@ -2331,15 +2331,15 @@ string CompilerHLSL::to_resource_binding(const SPIRVariable &var)
 			{
 				uint64_t flags = get_buffer_block_flags(var);
 				bool is_readonly = (flags & (1ull << DecorationNonWritable)) != 0;
-				space = is_readonly ? "t" : "u"; // UAV
+				space = is_readonly ? 't' : 'u'; // UAV
 			}
 			else if (has_decoration(type.self, DecorationBlock))
-				space = "b"; // Constant buffers
+				space = 'b'; // Constant buffers
 		}
 		else if (storage == StorageClassPushConstant)
-			space = "b"; // Constant buffers
+			space = 'b'; // Constant buffers
 		else if (storage == StorageClassStorageBuffer)
-			space = "u"; // UAV
+			space = 'u'; // UAV
 
 		break;
 	}
@@ -2350,12 +2350,8 @@ string CompilerHLSL::to_resource_binding(const SPIRVariable &var)
 	if (!space)
 		return "";
 
-	// shader model 5.1 supports space
-	if (options.shader_model >= 51)
-		return join(" : register(", space, get_decoration(var.self, DecorationBinding), ", space",
-		            get_decoration(var.self, DecorationDescriptorSet), ")");
-	else
-		return join(" : register(", space, get_decoration(var.self, DecorationBinding), ")");
+	return to_resource_register(space, get_decoration(var.self, DecorationBinding),
+	                            get_decoration(var.self, DecorationDescriptorSet));
 }
 
 string CompilerHLSL::to_resource_binding_sampler(const SPIRVariable &var)
@@ -2364,11 +2360,16 @@ string CompilerHLSL::to_resource_binding_sampler(const SPIRVariable &var)
 	if (!has_decoration(var.self, DecorationBinding))
 		return "";
 
+	return to_resource_register('s', get_decoration(var.self, DecorationBinding),
+	                            get_decoration(var.self, DecorationDescriptorSet));
+}
+
+string CompilerHLSL::to_resource_register(char space, uint32_t binding, uint32_t set)
+{
 	if (options.shader_model >= 51)
-		return join(" : register(s", get_decoration(var.self, DecorationBinding), ", space",
-		            get_decoration(var.self, DecorationDescriptorSet), ")");
+		return join(" : register(", space, binding, ", space", set, ")");
 	else
-		return join(" : register(s", get_decoration(var.self, DecorationBinding), ")");
+		return join(" : register(", space, binding, ", space", set, ")");
 }
 
 void CompilerHLSL::emit_modern_uniform(const SPIRVariable &var)

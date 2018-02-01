@@ -37,6 +37,9 @@ struct RootConstants
 {
 	uint32_t start;
 	uint32_t end;
+
+	uint32_t binding;
+	uint32_t space;
 };
 
 class CompilerHLSL : public CompilerGLSL
@@ -76,7 +79,7 @@ public:
 	// layout specified.
 	void set_root_constant_layouts(std::vector<RootConstants> layout)
 	{
-		root_constants_layout = layout;
+		root_constants_layout = std::move(layout);
 	}
 
 	// Compiles and remaps vertex attributes at specific locations to a fixed semantic.
@@ -118,6 +121,7 @@ private:
 	std::string to_sampler_expression(uint32_t id);
 	std::string to_resource_binding(const SPIRVariable &var);
 	std::string to_resource_binding_sampler(const SPIRVariable &var);
+	std::string to_resource_register(char space, uint32_t binding, uint32_t set);
 	void emit_sampled_image_op(uint32_t result_type, uint32_t result_id, uint32_t image_id, uint32_t samp_id) override;
 	void emit_access_chain(const Instruction &instruction);
 	void emit_load(const Instruction &instruction);
