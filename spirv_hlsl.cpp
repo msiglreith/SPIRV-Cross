@@ -1526,7 +1526,7 @@ void CompilerHLSL::emit_push_constant_block(const SPIRVariable &var)
 			add_resource_name(var.self);
 			auto &memb = meta[type.self].members;
 
-			statement("cbuffer ", to_name(var.self), to_resource_register('b', layout.binding, layout.space));
+			statement("cbuffer SPIRV_CROSS_RootConstant_", to_name(var.self), to_resource_register('b', layout.binding, layout.space));
 			begin_scope();
 			for (auto offset = layout.start; offset < layout.end; offset += 4)
 			{
