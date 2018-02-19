@@ -2740,7 +2740,7 @@ string CompilerHLSL::to_resource_binding_sampler(const SPIRVariable &var)
 		return "";
 
 	return to_resource_register('s', get_decoration(var.self, DecorationBinding),
-	                            get_decoration(var.self, DecorationDescriptorSet));
+	                            get_decoration(var.self, DecorationDescriptorSet) + 1);
 }
 
 string CompilerHLSL::to_resource_register(char space, uint32_t binding, uint32_t space_set)
