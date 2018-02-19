@@ -1714,11 +1714,13 @@ string CompilerHLSL::layout_for_member(const SPIRType &type, uint32_t index)
 {
 	auto flags = combined_decoration_for_member(type, index);
 
+	/*
 	bool is_block = meta[type.self].decoration.decoration_flags.get(DecorationBlock) ||
 	                meta[type.self].decoration.decoration_flags.get(DecorationBufferBlock);
 
 	if (!is_block)
 		return "";
+	*/
 
 	// Flip the convention. HLSL is a bit odd in that the memory layout is column major ... but the language API is "row-major".
 	// The way to deal with this is to multiply everything in inverse order, and reverse the memory layout.
