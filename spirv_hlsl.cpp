@@ -1856,7 +1856,7 @@ void CompilerHLSL::emit_push_constant_block(const SPIRVariable &var)
 			add_resource_name(var.self);
 			auto &memb = meta[type.self].members;
 
-			statement("cbuffer SPIRV_CROSS_RootConstant_", to_name(var.self),
+			statement("cbuffer ", to_name(type.self),
 			          to_resource_register('b', layout.binding, layout.space));
 			begin_scope();
 
@@ -1876,7 +1876,7 @@ void CompilerHLSL::emit_push_constant_block(const SPIRVariable &var)
 					auto backup_name = get_member_name(type.self, i);
 					auto member_name = to_member_name(type, i);
 					set_member_name(type.self, constant_index,
-					                sanitize_underscores(join(to_name(type.self), "_", member_name)));
+					                sanitize_underscores(join(to_name(var.self), "_", member_name)));
 					emit_struct_member(type, member, i, "", layout.start);
 					set_member_name(type.self, constant_index, backup_name);
 
